@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapist Availability Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        }
+        .card {
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Therapist Availability Tracker</h1>
+                <p class="text-gray-600" id="availabilityCount">
+                    21 of 22 therapists currently accepting new clients
+                </p>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search therapists..."
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div class="relative">
+                        <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <select id="locationFilter" class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Locations</option>
+                            <option value="Virtual">Virtual</option>
+                            <option value="Andersonville">Andersonville</option>
+                            <option value="Loop">Loop</option>
+                        </select>
+                    </div>
+
+                    <div class="relative">
+                        <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <select id="clientTypeFilter" class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Client Types</option>
+                            <option value="Individuals">Individuals</option>
+                            <option value="Couples">Couples</option>
+                            <option value="Families">Families</option>
+                            <option value="Kids/Teens">Kids/Teens</option>
+                        </select>
+                    </div>
+
+                    <div class="relative">
+                        <svg class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12,6 12,12 16,14"></polyline>
+                        </svg>
+                        <select id="timeFilter" class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Times</option>
+                            <option value="Mornings">Mornings</option>
+                            <option value="Lunch">Lunch Hour</option>
+                            <option value="Afternoons">Afternoons</option>
+                            <option value="Evenings">Evenings</option>
+                            <option value="Weekends">Weekends</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Therapist Cards Container -->
+            <div id="therapistCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be inserted here by JavaScript -->
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="text-center py-12 hidden">
+                <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No therapists found</h3>
+                <p class="text-gray-600">Try adjusting your search criteria</p>
+            </div>
+
+            <!-- Footer Stats -->
+            <div class="mt-8 bg-white rounded-lg shadow-sm border p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-green-600" id="availableCount">21</div>
+                        <div class="text-sm text-gray-600">Available</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-red-600" id="notAvailableCount">1</div>
+                        <div class="text-sm text-gray-600">Not Available</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600" id="totalCount">22</div>
+                        <div class="text-sm text-gray-600">Total Therapists</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600" id="percentageRate">95%</div>
+                        <div class="text-sm text-gray-600">Availability Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const therapists = [
+            {
+                name: "Natalie Dulin",
+                availability: "Mornings, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Individuals"],
+                schedule: "Mon: 11am, Tues: 9am, 11am, 2pm, 5pm (biweekly)",
+                acceptingNew: true
+            },
+            {
+                name: "Max Chang",
+                availability: "Mornings, Lunch Hour, Evenings",
+                location: "Virtual, Andersonville, Loop",
+                clientTypes: ["Individuals"],
+                schedule: "Mon (Andersonville): 1pm, Tuesday (Loop): 11am, 4pm",
+                acceptingNew: true
+            },
+            {
+                name: "Priscilla",
+                availability: "Afternoons",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Individuals", "Couples"],
+                schedule: "12pm, 2pm, 3pm every other Wednesday (AV or virtual), 2pm Tuesdays (virtual)",
+                acceptingNew: true
+            },
+            {
+                name: "Gianna Saviano",
+                availability: "Mornings, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Biweekly 10am Thursdays, Weekly 4pm Wednesdays",
+                acceptingNew: true
+            },
+            {
+                name: "Jamelle Apolinar",
+                availability: "Afternoons, Weekends",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Individuals", "Couples"],
+                schedule: "Fridays (Virtual): 8am, 10-12pm, 6-8pm; Saturdays (AV): 12pm (virtual only), 1-6pm; Sundays (AV): 10am-3pm, 6pm (virtual only)",
+                acceptingNew: true
+            },
+            {
+                name: "Zubia Siddiqui",
+                availability: "Lunch Hour, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Individuals"],
+                schedule: "Mondays: 2pm, 3pm (weekly), 7pm (biweekly). Also Tuesdays and Thursdays",
+                acceptingNew: true
+            },
+            {
+                name: "Jess Munzer",
+                availability: "Late mornings, Lunch Hour",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Kids/Teens"],
+                schedule: "Tues lunch/afternoon (Loop/Virtual), Wed lunch/afternoon/evenings (Virtual), Thu lunch/afternoon/evenings",
+                acceptingNew: true
+            },
+            {
+                name: "Maria Fernanda Chumacero",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Kids/Teens"],
+                schedule: "Monday (Loop): 12, 1, 4, 5, 7; Tuesday (Loop): 1",
+                acceptingNew: true
+            },
+            {
+                name: "Claudia Hindo",
+                availability: "Mornings, Lunch hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Families", "Couples"],
+                schedule: "Not taking new clients at the moment",
+                acceptingNew: false
+            },
+            {
+                name: "Tricia Dwyer",
+                availability: "Afternoons, Evenings",
+                location: "Andersonville, Loop",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Open to pretty much anything!",
+                acceptingNew: true
+            },
+            {
+                name: "Sowmya",
+                availability: "Evenings, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Couples"],
+                schedule: "Mon: 4pm, 6pm; Tuesday: 10am, 5pm; Fri: noon",
+                acceptingNew: true
+            },
+            {
+                name: "Innis Hitt",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Tuesdays (Loop/Virtual): 3, 4, 5, 6, 7; Wednesdays (Virtual): 10-1 and (Loop): 3, 4, 6, 7",
+                acceptingNew: true
+            },
+            {
+                name: "Rolando Torres",
+                availability: "Mornings, Afternoons",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Tuesdays: AV 10am, Virtual 3:30pm; Thursdays: Virtual 10am, 1pm, 2pm, 4:30pm",
+                acceptingNew: true
+            },
+            {
+                name: "Bria Jennings",
+                availability: "Afternoons, Evenings",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Individuals", "Couples", "Families"],
+                schedule: "Sunday (AV, Virtual): 12pm-5pm; Wednesday (AV, Virtual): 4pm-9pm",
+                acceptingNew: true
+            },
+            {
+                name: "Austin Ross",
+                availability: "Lunch Hour, Mornings",
+                location: "Virtual",
+                clientTypes: ["Individuals", "Couples"],
+                schedule: "Mondays: 8am, 9am, 11am, 12pm, 1pm weekly; 10am bi-weekly",
+                acceptingNew: true
+            },
+            {
+                name: "Tulika",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Monday (Virtual): 10am-12pm, 1pm-7pm; Tuesday (Virtual): 10am-12pm, 1pm-7pm",
+                acceptingNew: true
+            },
+            {
+                name: "Hebe",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Monday AV/Virtual: Morning, Afternoon, Evening; Tuesday AV/Virtual: Lunch Hour, Afternoon, Evening",
+                acceptingNew: true
+            },
+            {
+                name: "Kat Tepas",
+                availability: "Lunch Hour, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Open for anything except addiction, active suicidality and high conflict. Lots of openings around lunch",
+                acceptingNew: true
+            },
+            {
+                name: "Jamie Suh",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Open Schedule",
+                acceptingNew: true
+            },
+            {
+                name: "Alexa Cilia",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals", "Families"],
+                schedule: "Mondays (virtual): 10, 11, 12, 1, 2, 3; Tuesdays (virtual): 11, 12, 1, 2, 3, 4, 5, 6",
+                acceptingNew: true
+            },
+            {
+                name: "Damian J. Flores",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                schedule: "Monday mornings in the Loop: 12:00-2:30pm (In Office); Wednesday: 10:00-8:00pm (virtual)",
+                acceptingNew: true
+            },
+            {
+                name: "Jacqueline Lee",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Couples", "Kids/Teens"],
+                schedule: "Schedule details not provided",
+                acceptingNew: true
+            }
+        ];
+
+        let filteredTherapists = [...therapists];
+
+        function getLocationIcon(location) {
+            if (location.includes('Virtual')) return '💻';
+            if (location.includes('Andersonville')) return '🏢';
+            if (location.includes('Loop')) return '🏙️';
+            return '📍';
+        }
+
+        function createTherapistCard(therapist) {
+            const statusColor = therapist.acceptingNew 
+                ? 'bg-green-100 text-green-800 border-green-200'
+                : 'bg-red-100 text-red-800 border-red-200';
+            
+            const statusText = therapist.acceptingNew 
+                ? '<div class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1"></div>Available'
+                : '⚠️ Not Available';
+
+            const clientTypeTags = therapist.clientTypes.map(type => 
+                `<span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200">${type}</span>`
+            ).join('');
+
+            return `
+                <div class="bg-white rounded-lg shadow-sm border card">
+                    <div class="p-6">
+                        <!-- Header -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">${therapist.name}</h3>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor}">
+                                        ${statusText}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Availability Times -->
+                        <div class="mb-3">
+                            <div class="flex items-center text-sm text-gray-600 mb-1">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12,6 12,12 16,14"></polyline>
+                                </svg>
+                                <span class="font-medium">Available:</span>
+                            </div>
+                            <p class="text-sm text-gray-800 ml-5">${therapist.availability}</p>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <div class="flex items-center text-sm text-gray-600 mb-1">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span class="font-medium">Location:</span>
+                            </div>
+                            <p class="text-sm text-gray-800 ml-5">
+                                <span class="mr-1">${getLocationIcon(therapist.location)}</span>
+                                ${therapist.location}
+                            </p>
+                        </div>
+
+                        <!-- Client Types -->
+                        <div class="mb-4">
+                            <div class="flex items-center text-sm text-gray-600 mb-2">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <span class="font-medium">Specializes in:</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1 ml-5">
+                                ${clientTypeTags}
+                            </div>
+                        </div>
+
+                        <!-- Schedule Details -->
+                        <div class="border-t pt-3">
+                            <p class="text-xs font-medium text-gray-600 mb-1">Schedule Details:</p>
+                            <p class="text-xs text-gray-700 leading-relaxed">${therapist.schedule}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTherapists() {
+            const container = document.getElementById('therapistCards');
+            const noResults = document.getElementById('noResults');
+            
+            if (filteredTherapists.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                container.innerHTML = filteredTherapists.map(therapist => createTherapistCard(therapist)).join('');
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const available = filteredTherapists.filter(t => t.acceptingNew).length;
+            const total = filteredTherapists.length;
+            const notAvailable = total - available;
+            const percentage = total > 0 ? Math.round((available / total) * 100) : 0;
+
+            document.getElementById('availableCount').textContent = available;
+            document.getElementById('notAvailableCount').textContent = notAvailable;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('percentageRate').textContent = percentage + '%';
+            document.getElementById('availabilityCount').textContent = `${available} of ${total} therapists currently accepting new clients`;
+        }
+
+        function filterTherapists() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const locationFilter = document.getElementById('locationFilter').value;
+            const clientTypeFilter = document.getElementById('clientTypeFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+
+            filteredTherapists = therapists.filter(therapist => {
+                const matchesSearch = therapist.name.toLowerCase().includes(searchTerm);
+                const matchesLocation = !locationFilter || therapist.location.toLowerCase().includes(locationFilter.toLowerCase());
+                const matchesClientType = !clientTypeFilter || therapist.clientTypes.some(type => 
+                    type.toLowerCase().includes(clientTypeFilter.toLowerCase())
+                );
+                const matchesTime = !timeFilter || therapist.availability.toLowerCase().includes(timeFilter.toLowerCase());
+
+                return matchesSearch && matchesLocation && matchesClientType && matchesTime;
+            });
+
+            renderTherapists();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterTherapists);
+        document.getElementById('locationFilter').addEventListener('change', filterTherapists);
+        document.getElementById('clientTypeFilter').addEventListener('change', filterTherapists);
+        document.getElementById('timeFilter').addEventListener('change', filterTherapists);
+
+        // Initial render
+        renderTherapists();
+    </script>
+</body>
+</html>
