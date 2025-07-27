@@ -4,554 +4,588 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Therapist Availability Tracker</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="app" class="min-h-screen bg-gray-50 p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Therapist Availability Tracker</h1>
+                <p id="stats" class="text-gray-600">Loading...</p>
+            </div>
 
-    <script type="text/babel">
-        const { useState, useMemo } = React;
-        const { Search, Clock, MapPin, Users, AlertCircle, Filter, User, Calendar } = lucide;
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search therapists..."
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
 
-        const TherapistTracker = () => {
-            const [searchTerm, setSearchTerm] = useState('');
-            const [filterLocation, setFilterLocation] = useState('');
-            const [filterClientType, setFilterClientType] = useState('');
-            const [filterTimeOfDay, setFilterTimeOfDay] = useState('');
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">📍</span>
+                        <select
+                            id="locationFilter"
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">All Locations</option>
+                            <option value="Virtual">Virtual</option>
+                            <option value="Andersonville">Andersonville</option>
+                            <option value="Loop">Loop</option>
+                        </select>
+                    </div>
 
-            const therapists = [
-                {
-                    name: "Natalie Dulin",
-                    availability: "Mornings, Afternoons",
-                    location: "Virtual",
-                    clientTypes: ["Individuals"],
-                    scheduleOpenings: [
-                        "Monday: 11am",
-                        "Tuesday: 9am, 11am, 2pm, 5pm (biweekly)"
-                    ],
-                    populationFocus: ["Individuals"],
-                    specializes: ["Young adults", "Career transitions"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Max Chang",
-                    availability: "Mornings, Lunch Hour, Evenings",
-                    location: "Virtual, Andersonville, Loop",
-                    clientTypes: ["Individuals"],
-                    scheduleOpenings: [
-                        "Monday (Andersonville): 1pm",
-                        "Tuesday (Loop): 11am, 4pm"
-                    ],
-                    populationFocus: ["Individuals"],
-                    specializes: ["LGBTQ+ affirming", "Anxiety disorders"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Priscilla",
-                    availability: "Afternoons",
-                    location: "Virtual, Andersonville",
-                    clientTypes: ["Individuals", "Couples"],
-                    scheduleOpenings: [
-                        "Tuesday (Virtual): 2pm",
-                        "Wednesday (AV/Virtual): 12pm, 2pm, 3pm (biweekly)"
-                    ],
-                    populationFocus: ["Individuals", "Couples"],
-                    specializes: ["Relationship issues", "Depression"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Gianna Saviano",
-                    availability: "Mornings, Afternoons",
-                    location: "Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Thursday: 10am (biweekly)",
-                        "Wednesday: 4pm (weekly)"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Couples therapy", "Communication skills"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Jamelle Apolinar",
-                    availability: "Afternoons, Weekends",
-                    location: "Virtual, Andersonville",
-                    clientTypes: ["Individuals", "Couples"],
-                    scheduleOpenings: [
-                        "Friday (Virtual): 8am, 10am-12pm, 6pm-8pm",
-                        "Saturday (AV): 12pm (virtual only), 1pm-6pm",
-                        "Sunday (AV): 10am-3pm, 6pm (virtual only)"
-                    ],
-                    populationFocus: ["Individuals", "Couples"],
-                    specializes: ["Work-life balance", "Stress management"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Zubia Siddiqui",
-                    availability: "Lunch Hour, Afternoons",
-                    location: "Virtual",
-                    clientTypes: ["Individuals"],
-                    scheduleOpenings: [
-                        "Monday: 2pm, 3pm (weekly), 7pm (biweekly)",
-                        "Tuesday & Thursday: Various times"
-                    ],
-                    populationFocus: ["Individuals"],
-                    specializes: ["Cultural identity", "Immigration stress"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Jess Munzer",
-                    availability: "Late mornings, Lunch Hour",
-                    location: "Andersonville, Loop, Virtual",
-                    clientTypes: ["Couples", "Kids/Teens"],
-                    scheduleOpenings: [
-                        "Tuesday (Loop/Virtual): Lunch/afternoon",
-                        "Wednesday (Virtual): Lunch/afternoon/evenings",
-                        "Thursday: Lunch/afternoon/evenings"
-                    ],
-                    populationFocus: ["Couples", "Children", "Adolescents"],
-                    specializes: ["Family dynamics", "Teen counseling"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Maria Fernanda Chumacero",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Loop, Virtual",
-                    clientTypes: ["Individuals", "Kids/Teens"],
-                    scheduleOpenings: [
-                        "Monday (Loop): 12pm, 1pm, 4pm, 5pm, 7pm",
-                        "Tuesday (Loop): 1pm"
-                    ],
-                    populationFocus: ["Individuals", "Children", "Adolescents"],
-                    specializes: ["Bilingual therapy", "Cultural adaptation"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Claudia Hindo",
-                    availability: "Mornings, Lunch hour, Afternoons",
-                    location: "Loop, Virtual",
-                    clientTypes: ["Individuals", "Families", "Couples"],
-                    scheduleOpenings: [
-                        "Not taking new clients at the moment"
-                    ],
-                    populationFocus: ["Individuals", "Families", "Couples"],
-                    specializes: ["Complex trauma", "Family systems therapy"],
-                    acceptingNew: false
-                },
-                {
-                    name: "Tricia Dwyer",
-                    availability: "Afternoons, Evenings",
-                    location: "Andersonville, Loop",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Flexible scheduling available",
-                        "Open to most time slots"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Relationship counseling", "Life transitions"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Sowmya",
-                    availability: "Evenings, Afternoons",
-                    location: "Loop, Virtual",
-                    clientTypes: ["Individuals", "Couples"],
-                    scheduleOpenings: [
-                        "Monday: 4pm, 6pm",
-                        "Tuesday: 10am, 5pm",
-                        "Friday: 12pm"
-                    ],
-                    populationFocus: ["Individuals", "Couples"],
-                    specializes: ["Cultural identity", "Anxiety", "Depression"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Innis Hitt",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Loop, Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Tuesday (Loop/Virtual): 3pm, 4pm, 5pm, 6pm, 7pm",
-                        "Wednesday (Virtual): 10am-1pm",
-                        "Wednesday (Loop): 3pm, 4pm, 6pm, 7pm"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["LGBTQ+ affirming therapy", "Relationship counseling"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Rolando Torres",
-                    availability: "Mornings, Afternoons",
-                    location: "Virtual, Andersonville",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Tuesday: AV 10am, Virtual 3:30pm",
-                        "Thursday: Virtual 10am, 1pm, 2pm, 4:30pm"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Bilingual therapy", "Cultural identity", "Relationship issues"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Bria Jennings",
-                    availability: "Afternoons, Evenings",
-                    location: "Andersonville, Virtual",
-                    clientTypes: ["Individuals", "Couples", "Families"],
-                    scheduleOpenings: [
-                        "Sunday (AV/Virtual): 12pm-5pm",
-                        "Wednesday (AV/Virtual): 4pm-9pm"
-                    ],
-                    populationFocus: ["Individuals", "Couples", "Families"],
-                    specializes: ["Family therapy", "Cultural competency", "Trauma"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Austin Ross",
-                    availability: "Lunch Hour, Mornings",
-                    location: "Virtual",
-                    clientTypes: ["Individuals", "Couples"],
-                    scheduleOpenings: [
-                        "Monday: 8am, 9am, 11am, 12pm, 1pm (weekly)",
-                        "Monday: 10am (biweekly)"
-                    ],
-                    populationFocus: ["Individuals", "Couples"],
-                    specializes: ["Men's mental health", "Career stress", "Anxiety"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Tulika",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Monday (Virtual): 10am-12pm, 1pm-7pm",
-                        "Tuesday (Virtual): 10am-12pm, 1pm-7pm"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Cultural identity", "Intergenerational trauma", "Relationship counseling"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Hebe",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Loop, Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Monday (AV/Virtual): Morning, afternoon, evening",
-                        "Tuesday (AV/Virtual): Lunch hour, afternoon, evening"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Cross-cultural counseling", "Immigration adjustment", "Anxiety"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Kat Tepas",
-                    availability: "Lunch Hour, Afternoons",
-                    location: "Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Multiple lunch hour openings available",
-                        "Flexible afternoon scheduling"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["General therapy", "Relationship issues", "Depression"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Jamie Suh",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Loop, Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Open schedule with flexibility",
-                        "Multiple time slots available"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Cultural identity", "Asian American mental health", "Identity issues"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Alexa Cilia",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Loop, Virtual",
-                    clientTypes: ["Couples", "Individuals", "Families"],
-                    scheduleOpenings: [
-                        "Monday (Virtual): 10am, 11am, 12pm, 1pm, 2pm, 3pm",
-                        "Tuesday (Virtual): 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm, 6pm"
-                    ],
-                    populationFocus: ["Couples", "Individuals", "Families"],
-                    specializes: ["Family systems therapy", "Young adult issues", "Life transitions"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Damian J. Flores",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Loop, Virtual",
-                    clientTypes: ["Couples", "Individuals"],
-                    scheduleOpenings: [
-                        "Monday (Loop): 12pm-2:30pm (in office)",
-                        "Wednesday (Virtual): 10am-8pm"
-                    ],
-                    populationFocus: ["Couples", "Individuals"],
-                    specializes: ["Couples therapy", "Bilingual therapy", "Relationship counseling"],
-                    acceptingNew: true
-                },
-                {
-                    name: "Jacqueline Lee",
-                    availability: "Mornings, Lunch Hour, Afternoons",
-                    location: "Andersonville, Virtual",
-                    clientTypes: ["Couples", "Kids/Teens"],
-                    scheduleOpenings: [
-                        "Schedule details to be confirmed"
-                    ],
-                    populationFocus: ["Couples", "Adolescents", "Families"],
-                    specializes: ["Family counseling", "Teen therapy", "Cultural identity"],
-                    acceptingNew: true
-                }
-            ];
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">👥</span>
+                        <select
+                            id="clientTypeFilter"
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">All Client Types</option>
+                            <option value="Individuals">Individuals</option>
+                            <option value="Couples">Couples</option>
+                            <option value="Families">Families</option>
+                            <option value="Kids/Teens">Kids/Teens</option>
+                        </select>
+                    </div>
 
-            const filteredTherapists = useMemo(() => {
-                return therapists.filter(therapist => {
-                    const matchesSearch = therapist.name.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesLocation = !filterLocation || therapist.location.toLowerCase().includes(filterLocation.toLowerCase());
-                    const matchesClientType = !filterClientType || therapist.clientTypes.some(type => 
-                        type.toLowerCase().includes(filterClientType.toLowerCase())
-                    );
-                    const matchesTimeOfDay = !filterTimeOfDay || therapist.availability.toLowerCase().includes(filterTimeOfDay.toLowerCase());
-                    
-                    return matchesSearch && matchesLocation && matchesClientType && matchesTimeOfDay;
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">🕐</span>
+                        <select
+                            id="timeFilter"
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">All Times</option>
+                            <option value="Mornings">Mornings</option>
+                            <option value="Lunch">Lunch Hour</option>
+                            <option value="Afternoons">Afternoons</option>
+                            <option value="Evenings">Evenings</option>
+                            <option value="Weekends">Weekends</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Therapist Cards Container -->
+            <div id="therapistCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be inserted here by JavaScript -->
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="text-center py-12 hidden">
+                <div class="text-4xl mb-4">⚠️</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No therapists found</h3>
+                <p class="text-gray-600">Try adjusting your search criteria</p>
+            </div>
+
+            <!-- Footer Stats -->
+            <div class="mt-8 bg-white rounded-lg shadow-sm border p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center" id="footerStats">
+                    <!-- Stats will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const therapists = [
+            {
+                name: "Natalie Dulin",
+                availability: "Mornings, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Individuals"],
+                scheduleOpenings: [
+                    "Monday: 11am",
+                    "Tuesday: 9am, 11am, 2pm, 5pm (biweekly)"
+                ],
+                populationFocus: ["Individuals"],
+                specializes: ["Young adults", "Career transitions"],
+                acceptingNew: true
+            },
+            {
+                name: "Max Chang",
+                availability: "Mornings, Lunch Hour, Evenings",
+                location: "Virtual, Andersonville, Loop",
+                clientTypes: ["Individuals"],
+                scheduleOpenings: [
+                    "Monday (Andersonville): 1pm",
+                    "Tuesday (Loop): 11am, 4pm"
+                ],
+                populationFocus: ["Individuals"],
+                specializes: ["LGBTQ+ affirming", "Anxiety disorders"],
+                acceptingNew: true
+            },
+            {
+                name: "Priscilla",
+                availability: "Afternoons",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Individuals", "Couples"],
+                scheduleOpenings: [
+                    "Tuesday (Virtual): 2pm",
+                    "Wednesday (AV/Virtual): 12pm, 2pm, 3pm (biweekly)"
+                ],
+                populationFocus: ["Individuals", "Couples"],
+                specializes: ["Relationship issues", "Depression"],
+                acceptingNew: true
+            },
+            {
+                name: "Gianna Saviano",
+                availability: "Mornings, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Thursday: 10am (biweekly)",
+                    "Wednesday: 4pm (weekly)"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Couples therapy", "Communication skills"],
+                acceptingNew: true
+            },
+            {
+                name: "Jamelle Apolinar",
+                availability: "Afternoons, Weekends",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Individuals", "Couples"],
+                scheduleOpenings: [
+                    "Friday (Virtual): 8am, 10am-12pm, 6pm-8pm",
+                    "Saturday (AV): 12pm (virtual only), 1pm-6pm",
+                    "Sunday (AV): 10am-3pm, 6pm (virtual only)"
+                ],
+                populationFocus: ["Individuals", "Couples"],
+                specializes: ["Work-life balance", "Stress management"],
+                acceptingNew: true
+            },
+            {
+                name: "Zubia Siddiqui",
+                availability: "Lunch Hour, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Individuals"],
+                scheduleOpenings: [
+                    "Monday: 2pm, 3pm (weekly), 7pm (biweekly)",
+                    "Tuesday & Thursday: Various times"
+                ],
+                populationFocus: ["Individuals"],
+                specializes: ["Cultural identity", "Immigration stress"],
+                acceptingNew: true
+            },
+            {
+                name: "Jess Munzer",
+                availability: "Late mornings, Lunch Hour",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Kids/Teens"],
+                scheduleOpenings: [
+                    "Tuesday (Loop/Virtual): Lunch/afternoon",
+                    "Wednesday (Virtual): Lunch/afternoon/evenings",
+                    "Thursday: Lunch/afternoon/evenings"
+                ],
+                populationFocus: ["Couples", "Children", "Adolescents"],
+                specializes: ["Family dynamics", "Teen counseling"],
+                acceptingNew: true
+            },
+            {
+                name: "Maria Fernanda Chumacero",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Kids/Teens"],
+                scheduleOpenings: [
+                    "Monday (Loop): 12pm, 1pm, 4pm, 5pm, 7pm",
+                    "Tuesday (Loop): 1pm"
+                ],
+                populationFocus: ["Individuals", "Children", "Adolescents"],
+                specializes: ["Bilingual therapy", "Cultural adaptation"],
+                acceptingNew: true
+            },
+            {
+                name: "Claudia Hindo",
+                availability: "Mornings, Lunch hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Families", "Couples"],
+                scheduleOpenings: [
+                    "Not taking new clients at the moment"
+                ],
+                populationFocus: ["Individuals", "Families", "Couples"],
+                specializes: ["Complex trauma", "Family systems therapy"],
+                acceptingNew: false
+            },
+            {
+                name: "Tricia Dwyer",
+                availability: "Afternoons, Evenings",
+                location: "Andersonville, Loop",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Flexible scheduling available",
+                    "Open to most time slots"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Relationship counseling", "Life transitions"],
+                acceptingNew: true
+            },
+            {
+                name: "Sowmya",
+                availability: "Evenings, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Individuals", "Couples"],
+                scheduleOpenings: [
+                    "Monday: 4pm, 6pm",
+                    "Tuesday: 10am, 5pm",
+                    "Friday: 12pm"
+                ],
+                populationFocus: ["Individuals", "Couples"],
+                specializes: ["Cultural identity", "Anxiety", "Depression"],
+                acceptingNew: true
+            },
+            {
+                name: "Innis Hitt",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Tuesday (Loop/Virtual): 3pm, 4pm, 5pm, 6pm, 7pm",
+                    "Wednesday (Virtual): 10am-1pm",
+                    "Wednesday (Loop): 3pm, 4pm, 6pm, 7pm"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["LGBTQ+ affirming therapy", "Relationship counseling"],
+                acceptingNew: true
+            },
+            {
+                name: "Rolando Torres",
+                availability: "Mornings, Afternoons",
+                location: "Virtual, Andersonville",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Tuesday: AV 10am, Virtual 3:30pm",
+                    "Thursday: Virtual 10am, 1pm, 2pm, 4:30pm"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Bilingual therapy", "Cultural identity", "Relationship issues"],
+                acceptingNew: true
+            },
+            {
+                name: "Bria Jennings",
+                availability: "Afternoons, Evenings",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Individuals", "Couples", "Families"],
+                scheduleOpenings: [
+                    "Sunday (AV/Virtual): 12pm-5pm",
+                    "Wednesday (AV/Virtual): 4pm-9pm"
+                ],
+                populationFocus: ["Individuals", "Couples", "Families"],
+                specializes: ["Family therapy", "Cultural competency", "Trauma"],
+                acceptingNew: true
+            },
+            {
+                name: "Austin Ross",
+                availability: "Lunch Hour, Mornings",
+                location: "Virtual",
+                clientTypes: ["Individuals", "Couples"],
+                scheduleOpenings: [
+                    "Monday: 8am, 9am, 11am, 12pm, 1pm (weekly)",
+                    "Monday: 10am (biweekly)"
+                ],
+                populationFocus: ["Individuals", "Couples"],
+                specializes: ["Men's mental health", "Career stress", "Anxiety"],
+                acceptingNew: true
+            },
+            {
+                name: "Tulika",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Monday (Virtual): 10am-12pm, 1pm-7pm",
+                    "Tuesday (Virtual): 10am-12pm, 1pm-7pm"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Cultural identity", "Intergenerational trauma", "Relationship counseling"],
+                acceptingNew: true
+            },
+            {
+                name: "Hebe",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Monday (AV/Virtual): Morning, afternoon, evening",
+                    "Tuesday (AV/Virtual): Lunch hour, afternoon, evening"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Cross-cultural counseling", "Immigration adjustment", "Anxiety"],
+                acceptingNew: true
+            },
+            {
+                name: "Kat Tepas",
+                availability: "Lunch Hour, Afternoons",
+                location: "Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Multiple lunch hour openings available",
+                    "Flexible afternoon scheduling"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["General therapy", "Relationship issues", "Depression"],
+                acceptingNew: true
+            },
+            {
+                name: "Jamie Suh",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Open schedule with flexibility",
+                    "Multiple time slots available"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Cultural identity", "Asian American mental health", "Identity issues"],
+                acceptingNew: true
+            },
+            {
+                name: "Alexa Cilia",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Loop, Virtual",
+                clientTypes: ["Couples", "Individuals", "Families"],
+                scheduleOpenings: [
+                    "Monday (Virtual): 10am, 11am, 12pm, 1pm, 2pm, 3pm",
+                    "Tuesday (Virtual): 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm, 6pm"
+                ],
+                populationFocus: ["Couples", "Individuals", "Families"],
+                specializes: ["Family systems therapy", "Young adult issues", "Life transitions"],
+                acceptingNew: true
+            },
+            {
+                name: "Damian J. Flores",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Loop, Virtual",
+                clientTypes: ["Couples", "Individuals"],
+                scheduleOpenings: [
+                    "Monday (Loop): 12pm-2:30pm (in office)",
+                    "Wednesday (Virtual): 10am-8pm"
+                ],
+                populationFocus: ["Couples", "Individuals"],
+                specializes: ["Couples therapy", "Bilingual therapy", "Relationship counseling"],
+                acceptingNew: true
+            },
+            {
+                name: "Jacqueline Lee",
+                availability: "Mornings, Lunch Hour, Afternoons",
+                location: "Andersonville, Virtual",
+                clientTypes: ["Couples", "Kids/Teens"],
+                scheduleOpenings: [
+                    "Schedule details to be confirmed"
+                ],
+                populationFocus: ["Couples", "Adolescents", "Families"],
+                specializes: ["Family counseling", "Teen therapy", "Cultural identity"],
+                acceptingNew: true
+            }
+        ];
+
+        let filteredTherapists = [...therapists];
+
+        function getLocationIcon(location) {
+            if (location.includes('Virtual')) return '💻';
+            if (location.includes('Andersonville')) return '🏢';
+            if (location.includes('Loop')) return '🏙️';
+            return '📍';
+        }
+
+        function createTherapistCard(therapist) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow';
+            
+            const statusClass = therapist.acceptingNew 
+                ? 'bg-green-100 text-green-800 border-green-200' 
+                : 'bg-red-100 text-red-800 border-red-200';
+            
+            const statusIndicator = therapist.acceptingNew
+                ? '<span class="status-dot bg-green-400"></span>Available'
+                : '⚠️ Not Available';
+
+            card.innerHTML = `
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-blue-600">👤</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">${therapist.name}</h3>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}">
+                                    ${statusIndicator}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Availability Times -->
+                    <div class="mb-3">
+                        <div class="flex items-center text-sm text-gray-600 mb-1">
+                            <span class="mr-1">🕐</span>
+                            <span class="font-medium">Available:</span>
+                        </div>
+                        <p class="text-sm text-gray-800 ml-5">${therapist.availability}</p>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="mb-3">
+                        <div class="flex items-center text-sm text-gray-600 mb-1">
+                            <span class="mr-1">📍</span>
+                            <span class="font-medium">Location:</span>
+                        </div>
+                        <p class="text-sm text-gray-800 ml-5">
+                            <span class="mr-1">${getLocationIcon(therapist.location)}</span>
+                            ${therapist.location}
+                        </p>
+                    </div>
+
+                    <!-- Population Focus -->
+                    <div class="mb-3">
+                        <div class="flex items-center text-sm text-gray-600 mb-2">
+                            <span class="mr-1">👥</span>
+                            <span class="font-medium">Population Focus:</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 ml-5">
+                            ${therapist.populationFocus.map(focus => 
+                                `<span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200">${focus}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Specializations -->
+                    <div class="mb-4">
+                        <div class="flex items-center text-sm text-gray-600 mb-2">
+                            <span class="mr-1">⚠️</span>
+                            <span class="font-medium">Specializes in:</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 ml-5">
+                            ${therapist.specializes.map(specialty => 
+                                `<span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-50 text-green-700 border border-green-200">${specialty}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Schedule Openings -->
+                    <div class="border-t pt-3">
+                        <div class="flex items-center text-sm text-gray-600 mb-2">
+                            <span class="mr-1">📅</span>
+                            <span class="font-medium">Schedule Openings:</span>
+                        </div>
+                        <div class="ml-5 space-y-1">
+                            ${therapist.scheduleOpenings.map(opening => 
+                                `<div class="text-xs text-gray-700 flex items-start">
+                                    <span class="w-1 h-1 bg-gray-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                    <span class="leading-relaxed">${opening}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function renderTherapists() {
+            const container = document.getElementById('therapistCards');
+            const noResults = document.getElementById('noResults');
+            
+            container.innerHTML = '';
+            
+            if (filteredTherapists.length === 0) {
+                container.classList.add('hidden');
+                noResults.classList.remove('hidden');
+            } else {
+                container.classList.remove('hidden');
+                noResults.classList.add('hidden');
+                
+                filteredTherapists.forEach(therapist => {
+                    container.appendChild(createTherapistCard(therapist));
                 });
-            }, [searchTerm, filterLocation, filterClientType, filterTimeOfDay]);
+            }
+            
+            updateStats();
+        }
 
+        function updateStats() {
             const availableCount = filteredTherapists.filter(t => t.acceptingNew).length;
             const totalCount = filteredTherapists.length;
+            
+            document.getElementById('stats').textContent = 
+                `${availableCount} of ${totalCount} therapists currently accepting new clients`;
+            
+            const totalAvailable = therapists.filter(t => t.acceptingNew).length;
+            const totalNotAvailable = therapists.filter(t => !t.acceptingNew).length;
+            const availabilityRate = Math.round((totalAvailable / therapists.length) * 100);
+            
+            document.getElementById('footerStats').innerHTML = `
+                <div>
+                    <div class="text-2xl font-bold text-green-600">${totalAvailable}</div>
+                    <div class="text-sm text-gray-600">Available</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-red-600">${totalNotAvailable}</div>
+                    <div class="text-sm text-gray-600">Not Available</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-blue-600">${therapists.length}</div>
+                    <div class="text-sm text-gray-600">Total Therapists</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-purple-600">${availabilityRate}%</div>
+                    <div class="text-sm text-gray-600">Availability Rate</div>
+                </div>
+            `;
+        }
 
-            const getStatusColor = (accepting) => {
-                return accepting ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200';
-            };
+        function filterTherapists() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const locationFilter = document.getElementById('locationFilter').value;
+            const clientTypeFilter = document.getElementById('clientTypeFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            
+            filteredTherapists = therapists.filter(therapist => {
+                const matchesSearch = therapist.name.toLowerCase().includes(searchTerm);
+                const matchesLocation = !locationFilter || therapist.location.toLowerCase().includes(locationFilter.toLowerCase());
+                const matchesClientType = !clientTypeFilter || therapist.clientTypes.some(type => 
+                    type.toLowerCase().includes(clientTypeFilter.toLowerCase())
+                );
+                const matchesTime = !timeFilter || therapist.availability.toLowerCase().includes(timeFilter.toLowerCase());
+                
+                return matchesSearch && matchesLocation && matchesClientType && matchesTime;
+            });
+            
+            renderTherapists();
+        }
 
-            const getLocationIcon = (location) => {
-                if (location.includes('Virtual')) return '💻';
-                if (location.includes('Andersonville')) return '🏢';
-                if (location.includes('Loop')) return '🏙️';
-                return '📍';
-            };
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterTherapists);
+        document.getElementById('locationFilter').addEventListener('change', filterTherapists);
+        document.getElementById('clientTypeFilter').addEventListener('change', filterTherapists);
+        document.getElementById('timeFilter').addEventListener('change', filterTherapists);
 
-            return React.createElement('div', { className: "min-h-screen bg-gray-50 p-6" },
-                React.createElement('div', { className: "max-w-7xl mx-auto" },
-                    // Header
-                    React.createElement('div', { className: "mb-8" },
-                        React.createElement('h1', { className: "text-3xl font-bold text-gray-900 mb-2" }, "Therapist Availability Tracker"),
-                        React.createElement('p', { className: "text-gray-600" }, 
-                            `${availableCount} of ${totalCount} therapists currently accepting new clients`
-                        )
-                    ),
-
-                    // Search and Filters
-                    React.createElement('div', { className: "bg-white rounded-lg shadow-sm border p-6 mb-6" },
-                        React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" },
-                            // Search input
-                            React.createElement('div', { className: "relative" },
-                                React.createElement(Search, { className: "absolute left-3 top-3 h-4 w-4 text-gray-400" }),
-                                React.createElement('input', {
-                                    type: "text",
-                                    placeholder: "Search therapists...",
-                                    className: "pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                    value: searchTerm,
-                                    onChange: (e) => setSearchTerm(e.target.value)
-                                })
-                            ),
-
-                            // Location filter
-                            React.createElement('div', { className: "relative" },
-                                React.createElement(MapPin, { className: "absolute left-3 top-3 h-4 w-4 text-gray-400" }),
-                                React.createElement('select', {
-                                    className: "pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                    value: filterLocation,
-                                    onChange: (e) => setFilterLocation(e.target.value)
-                                },
-                                    React.createElement('option', { value: "" }, "All Locations"),
-                                    React.createElement('option', { value: "Virtual" }, "Virtual"),
-                                    React.createElement('option', { value: "Andersonville" }, "Andersonville"),
-                                    React.createElement('option', { value: "Loop" }, "Loop")
-                                )
-                            ),
-
-                            // Client type filter
-                            React.createElement('div', { className: "relative" },
-                                React.createElement(Users, { className: "absolute left-3 top-3 h-4 w-4 text-gray-400" }),
-                                React.createElement('select', {
-                                    className: "pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                    value: filterClientType,
-                                    onChange: (e) => setFilterClientType(e.target.value)
-                                },
-                                    React.createElement('option', { value: "" }, "All Client Types"),
-                                    React.createElement('option', { value: "Individuals" }, "Individuals"),
-                                    React.createElement('option', { value: "Couples" }, "Couples"),
-                                    React.createElement('option', { value: "Families" }, "Families"),
-                                    React.createElement('option', { value: "Kids/Teens" }, "Kids/Teens")
-                                )
-                            ),
-
-                            // Time filter
-                            React.createElement('div', { className: "relative" },
-                                React.createElement(Clock, { className: "absolute left-3 top-3 h-4 w-4 text-gray-400" }),
-                                React.createElement('select', {
-                                    className: "pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                    value: filterTimeOfDay,
-                                    onChange: (e) => setFilterTimeOfDay(e.target.value)
-                                },
-                                    React.createElement('option', { value: "" }, "All Times"),
-                                    React.createElement('option', { value: "Mornings" }, "Mornings"),
-                                    React.createElement('option', { value: "Lunch" }, "Lunch Hour"),
-                                    React.createElement('option', { value: "Afternoons" }, "Afternoons"),
-                                    React.createElement('option', { value: "Evenings" }, "Evenings"),
-                                    React.createElement('option', { value: "Weekends" }, "Weekends")
-                                )
-                            )
-                        )
-                    ),
-
-                    // Therapist Cards
-                    React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" },
-                        filteredTherapists.map((therapist, index) =>
-                            React.createElement('div', { key: index, className: "bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow" },
-                                React.createElement('div', { className: "p-6" },
-                                    // Header
-                                    React.createElement('div', { className: "flex items-start justify-between mb-4" },
-                                        React.createElement('div', { className: "flex items-center" },
-                                            React.createElement('div', { className: "w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3" },
-                                                React.createElement(User, { className: "h-5 w-5 text-blue-600" })
-                                            ),
-                                            React.createElement('div', null,
-                                                React.createElement('h3', { className: "font-semibold text-gray-900" }, therapist.name),
-                                                React.createElement('span', { className: `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(therapist.acceptingNew)}` },
-                                                    therapist.acceptingNew ? 
-                                                        [
-                                                            React.createElement('div', { key: 'dot', className: "w-1.5 h-1.5 bg-green-400 rounded-full mr-1" }),
-                                                            "Available"
-                                                        ] :
-                                                        [
-                                                            React.createElement(AlertCircle, { key: 'icon', className: "w-3 h-3 mr-1" }),
-                                                            "Not Available"
-                                                        ]
-                                                )
-                                            )
-                                        )
-                                    ),
-
-                                    // Availability Times
-                                    React.createElement('div', { className: "mb-3" },
-                                        React.createElement('div', { className: "flex items-center text-sm text-gray-600 mb-1" },
-                                            React.createElement(Clock, { className: "h-4 w-4 mr-1" }),
-                                            React.createElement('span', { className: "font-medium" }, "Available:")
-                                        ),
-                                        React.createElement('p', { className: "text-sm text-gray-800 ml-5" }, therapist.availability)
-                                    ),
-
-                                    // Location
-                                    React.createElement('div', { className: "mb-3" },
-                                        React.createElement('div', { className: "flex items-center text-sm text-gray-600 mb-1" },
-                                            React.createElement(MapPin, { className: "h-4 w-4 mr-1" }),
-                                            React.createElement('span', { className: "font-medium" }, "Location:")
-                                        ),
-                                        React.createElement('p', { className: "text-sm text-gray-800 ml-5" },
-                                            React.createElement('span', { className: "mr-1" }, getLocationIcon(therapist.location)),
-                                            therapist.location
-                                        )
-                                    ),
-
-                                    // Population Focus
-                                    React.createElement('div', { className: "mb-3" },
-                                        React.createElement('div', { className: "flex items-center text-sm text-gray-600 mb-2" },
-                                            React.createElement(Users, { className: "h-4 w-4 mr-1" }),
-                                            React.createElement('span', { className: "font-medium" }, "Population Focus:")
-                                        ),
-                                        React.createElement('div', { className: "flex flex-wrap gap-1 ml-5" },
-                                            therapist.populationFocus.map((focus, idx) =>
-                                                React.createElement('span', { 
-                                                    key: idx, 
-                                                    className: "inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200" 
-                                                }, focus)
-                                            )
-                                        )
-                                    ),
-
-                                    // Specializations
-                                    React.createElement('div', { className: "mb-4" },
-                                        React.createElement('div', { className: "flex items-center text-sm text-gray-600 mb-2" },
-                                            React.createElement(AlertCircle, { className: "h-4 w-4 mr-1" }),
-                                            React.createElement('span', { className: "font-medium" }, "Specializes in:")
-                                        ),
-                                        React.createElement('div', { className: "flex flex-wrap gap-1 ml-5" },
-                                            therapist.specializes.map((specialty, idx) =>
-                                                React.createElement('span', { 
-                                                    key: idx, 
-                                                    className: "inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-50 text-green-700 border border-green-200" 
-                                                }, specialty)
-                                            )
-                                        )
-                                    ),
-
-                                    // Schedule Openings
-                                    React.createElement('div', { className: "border-t pt-3" },
-                                        React.createElement('div', { className: "flex items-center text-sm text-gray-600 mb-2" },
-                                            React.createElement(Calendar, { className: "h-4 w-4 mr-1" }),
-                                            React.createElement('span', { className: "font-medium" }, "Schedule Openings:")
-                                        ),
-                                        React.createElement('div', { className: "ml-5 space-y-1" },
-                                            therapist.scheduleOpenings.map((opening, idx) =>
-                                                React.createElement('div', { key: idx, className: "text-xs text-gray-700 flex items-start" },
-                                                    React.createElement('span', { className: "w-1 h-1 bg-gray-400 rounded-full mt-1.5 mr-2 flex-shrink-0" }),
-                                                    React.createElement('span', { className: "leading-relaxed" }, opening)
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // No Results
-                    filteredTherapists.length === 0 && React.createElement('div', { className: "text-center py-12" },
-                        React.createElement(AlertCircle, { className: "h-12 w-12 text-gray-400 mx-auto mb-4" }),
-                        React.createElement('h3', { className: "text-lg font-medium text-gray-900 mb-2" }, "No therapists found"),
-                        React.createElement('p', { className: "text-gray-600" }, "Try adjusting your search criteria")
-                    ),
-
-                    // Footer Stats
-                    React.createElement('div', { className: "mt-8 bg-white rounded-lg shadow-sm border p-6" },
-                        React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 text-center" },
-                            React.createElement('div', null,
-                                React.createElement('div', { className: "text-2xl font-bold text-green-600" }, therapists.filter(t => t.acceptingNew).length),
-                                React.createElement('div', { className: "text-sm text-gray-600" }, "Available")
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('div', { className: "text-2xl font-bold text-red-600" }, therapists.filter(t => !t.acceptingNew).length),
-                                React.createElement('div', { className: "text-sm text-gray-600" }, "Not Available")
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('div', { className: "text-2xl font-bold text-blue-600" }, therapists.length),
-                                React.createElement('div', { className: "text-sm text-gray-600" }, "Total Therapists")
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('div', { className: "text-2xl font-bold text-purple-600" }, 
-                                    Math.round((therapists.filter(t => t.acceptingNew).length / therapists.length) * 100) + '%'
-                                ),
-                                React.createElement('div', { className: "text-sm text-gray-600" }, "Availability Rate")
-                            )
-                        )
-                    )
-                )
-            );
-        };
-
-        ReactDOM.render(React.createElement(TherapistTracker), document.getElementById('root'));
+        // Initial render
+        renderTherapists();
     </script>
 </body>
 </html>
